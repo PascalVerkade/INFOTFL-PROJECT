@@ -4,10 +4,13 @@ from ProgSnap2 import ProgSnap2Dataset
 import numpy as np
 
 
-class student:
+class Student:
 
-    def __init__(self, problems):
-        problems = problems
+    def __init__(self, problem_dic, student_id, student_skills_array):
+        self.student_id = student_id
+        self.problems = problem_dic
+        self.student_skills = student_skills_array
+
 
 
 
@@ -26,26 +29,46 @@ META_PROBLEM_FILE = r"\2nd CSEDM Data Challenge - Problem Prompts & Concepts Use
 
 
 meta_problem = pd.read_excel(META_PROBLEM_PATH + META_PROBLEM_FILE)
+meta_problem = meta_problem.fillna(0)
+meta_problem = meta_problem.drop(["AssignmentID", 'Requirement'], axis=1)
+
+
 
 subjects = meta_problem.columns
-subjects = subjects.drop("AssignmentID", "ProblemID")
+subjects = subjects.drop("ProblemID")
 
 
 person_ids = (early_train["SubjectID"].unique())
-
-
+student_list = []
 for person_id in person_ids:
-    print(person_id)
     row_person = early_train[early_train["SubjectID"] == person_id]
     average_correct = sum(row_person["Label"] == True)/len(row_person["Label"])
-    print(row_person["Label"] == True)
+    problems = dict(zip(row_person.ProblemID, row_person.Label))
+    student_skills = np.zeros(len(subjects))
+    new_student = Student(problem_dic=problems, student_id=person_id, student_skills_array=student_skills)
+    student_list.append(new_student)
+
+for student in student_list:
+    for problem in student.problems:
+        problem_row = meta_problem[meta_problem["ProblemID"] == problem]
+        problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy()
+        problem_row = problem_row.flatten()
+        if student.problems[problem]:
+            student.student_skills += problem_row
+
+for student in student_list:
+    print(student.student_skills)
+
+for problem in student.problems:
+    problem_row = meta_problem[meta_problem["ProblemID"] == problem]
+    problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy().flatten()
+    relevant_skills = problem_row == 1
+
+
+    #indices =
     break
 
-
-
-
-
-
+""""
 problem_ids = early_train["ProblemID"].unique()
 
 problem_Labels = early_train.groupby("ProblemID")["Label"].apply(list).to_dict()
@@ -75,7 +98,7 @@ print(problem_Labels_fraction_correct)
 print(problem_EC_fraction_correct)
 print(aa)
 
-
+"""
 
 
 """"
