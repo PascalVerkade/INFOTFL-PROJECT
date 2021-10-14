@@ -32,41 +32,29 @@ meta_problem = pd.read_excel(META_PROBLEM_PATH + META_PROBLEM_FILE)
 meta_problem = meta_problem.fillna(0)
 meta_problem = meta_problem.drop(["AssignmentID", 'Requirement'], axis=1)
 
-def initialise_students(student_dataframe):
-    person_ids = student_dataframe["SubjectID"].unique()
-    subjects = student_dataframe["ProblemID"].unique()
-    student_list = []
-    for person_id in person_ids:
-        row_person = student_dataframe[student_dataframe["SubjectID"] == person_id]
-        problems = dict(zip(row_person.ProblemID, row_person.Label))
-        student_skills = np.zeros(len(subjects))
-        new_student = Student(problem_dic=problems, student_id=person_id, student_skills_array=student_skills)
-        student_list.append(new_student)
-        return student_list
 
 
-student_list = initialise_students(early_train)
+subjects = meta_problem.columns
+subjects = subjects.drop("ProblemID")
 
 
-def update_model(student_skills, problem):
-    problem_row = meta_problem[meta_problem["ProblemID"] == problem]
-    problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy()
-    problem_row = problem_row.flatten()
-    print(problem_row)
-    print(student_skills)
-    student_skills += problem_row
+person_ids = (early_train["SubjectID"].unique())
+student_list = []
+for person_id in person_ids:
+    row_person = early_train[early_train["SubjectID"] == person_id]
+    average_correct = sum(row_person["Label"] == True)/len(row_person["Label"])
+    problems = dict(zip(row_person.ProblemID, row_person.Label))
+    student_skills = np.zeros(len(subjects))
+    new_student = Student(problem_dic=problems, student_id=person_id, student_skills_array=student_skills)
+    student_list.append(new_student)
 
-
-def model_abilities(student_list):
-    for student in student_list:
-        for problem in student.problems:
-            if student.problems[problem]:
-                update_model(student.student_skills, problem)
-            else:
-                return
-
-
-model_abilities(student_list)
+for student in student_list:
+    for problem in student.problems:
+        problem_row = meta_problem[meta_problem["ProblemID"] == problem]
+        problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy()
+        problem_row = problem_row.flatten()
+        if student.problems[problem]:
+            student.student_skills += problem_row
 
 for student in student_list:
     print(student.student_skills)
