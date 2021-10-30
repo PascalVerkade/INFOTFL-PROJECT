@@ -34,7 +34,7 @@ meta_problem = meta_problem.drop(["AssignmentID", 'Requirement'], axis=1)
 
 def initialise_students(student_dataframe):
     person_ids = student_dataframe["SubjectID"].unique()
-    subjects = student_dataframe["ProblemID"].unique()
+    subjects = meta_problem.iloc[0].to_numpy()
     student_list = []
     for person_id in person_ids:
         row_person = student_dataframe[student_dataframe["SubjectID"] == person_id]
@@ -52,18 +52,18 @@ def update_model(student_skills, problem):
     problem_row = meta_problem[meta_problem["ProblemID"] == problem]
     problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy()
     problem_row = problem_row.flatten()
+
     print(problem_row)
     print(student_skills)
     student_skills += problem_row
 
 
-def model_abilities(student_list):
-    for student in student_list:
-        for problem in student.problems:
-            if student.problems[problem]:
-                update_model(student.student_skills, problem)
-            else:
-                return
+def model_abilities(student):
+    for problem in student.problems:
+        if student.problems[problem]:
+            update_model(student.student_skills, problem)
+        else:
+            return
 
 
 model_abilities(student_list)
