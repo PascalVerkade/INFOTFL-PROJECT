@@ -6,34 +6,34 @@ import numpy as np
 
 class Student:
 
+    def __init__(self, problem_dic, student_id, student_skills_array):
         self.student_id = student_id
         self.problems = problem_dic
         self.student_skills = student_skills_array
 
 
-
-
 semester = 'S19'
-BASE_PATH = os.path.join('../..', 'Release', semester)
+BASE_PATH = os.path.join('..', 'Release', semester)
 TRAIN_PATH = os.path.join(BASE_PATH, 'Train')
 TEST_PATH = os.path.join(BASE_PATH, 'Test')
 MAIN_PATH = os.path.join(BASE_PATH, r'Test\Data')
 
 main = ProgSnap2Dataset(os.path.join(MAIN_PATH, 'MainTable'))
-train_ps2 = ProgSnap2Dataset(os.path.join(TRAIN_PATH, '../..'))
+train_ps2 = ProgSnap2Dataset(os.path.join(TRAIN_PATH, '..'))
 early_train = pd.read_csv(os.path.join(TRAIN_PATH, 'early.csv'))
 
-META_PROBLEM_PATH = r"C:\Users\Thimo\Documents\School Documenten\ToL\CSEDMDataChallenge-main\data\Release\S19"
-META_PROBLEM_FILE = r"\2nd CSEDM Data Challenge - Problem Prompts & Concepts Used.xlsx"
+META_PROBLEM_FILE = r"2nd CSEDM Data Challenge - Problem Prompts _ Concepts Used.xlsx"
+META_PROBLEM_PATH = os.path.join(BASE_PATH, META_PROBLEM_FILE)
 
-
-meta_problem = pd.read_excel(META_PROBLEM_PATH + META_PROBLEM_FILE)
+meta_problem = pd.read_excel(META_PROBLEM_PATH, engine='openpyxl')
 meta_problem = meta_problem.fillna(0)
 meta_problem = meta_problem.drop(["AssignmentID", 'Requirement'], axis=1)
+meta_problem_subjects = meta_problem.drop(["ProblemID"], axis=1)
+
 
 def initialise_students(student_dataframe):
     person_ids = student_dataframe["SubjectID"].unique()
-    subjects = meta_problem.iloc[0].to_numpy()
+    subjects = meta_problem_subjects.iloc[0].to_numpy()
     student_list = []
     for person_id in person_ids:
         row_person = student_dataframe[student_dataframe["SubjectID"] == person_id]
@@ -52,8 +52,6 @@ def update_model(student_skills, problem):
     problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy()
     problem_row = problem_row.flatten()
 
-    print(problem_row)
-    print(student_skills)
     student_skills += problem_row
 
 
@@ -62,22 +60,13 @@ def model_abilities(student):
         if student.problems[problem]:
             update_model(student.student_skills, problem)
         else:
-            return
+            continue
 
-
-model_abilities(student_list)
-
+print(student_list[0].student_skills)
 for student in student_list:
-    print(student.student_skills)
+    model_abilities(student)
+print(student_list[0].student_skills)
 
-for problem in student.problems:
-    problem_row = meta_problem[meta_problem["ProblemID"] == problem]
-    problem_row = problem_row.drop(["ProblemID"], axis=1).to_numpy().flatten()
-    relevant_skills = problem_row == 1
-
-
-    #indices =
-    break
 
 """"
 problem_ids = early_train["ProblemID"].unique()
