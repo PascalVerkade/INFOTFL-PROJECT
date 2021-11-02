@@ -46,7 +46,34 @@ meta_problem = meta_problem.fillna(0)
 meta_problem = meta_problem.drop(["AssignmentID", 'Requirement'], axis=1)
 meta_problem_subjects = meta_problem.drop(["ProblemID"], axis=1)
 
+hierarchy = {
+    'If/Else' : 3,
+    'NestedIf': 3,
+    'While': 4,
+    'For': 4,
+    'NestedFor': 4,
+    'Math+-*/' : 2,
+    'Math%' : 2,
+    'LogicAndNotOr': 1,
+    'LogicCompareNum' : 1,
+    'LogicBoolean' : 1,
+    'StringFormat' : 5,
+    'StringConcat' : 5,
+    'StringIndex' : 5,
+    'StringLen' : 5,
+    'StringEqual' : 6,
+    'CharEqual' : 6,
+    'ArrayIndex' : 5,
+    'DefFunction' : 7
+    }
 
+concept_array = ['If/Else','NestedIf', 'While', 'For', 'NestedFor', 
+                 'Math+-*/', 'Math%', 'LogicAndNotOr', 'LogicCompareNum', 
+                 'LogicBoolean' , 'StringFormat', 'StringConcat', 'StringIndex',
+                 'StringLen', 'StringEqual', 'CharEqual', 'ArrayIndex' , 'DefFunction'
+                 
+                 
+                 ]
 #for attempts per problem
 main_table = main.get_main_table()
 student_problem_codestate = main_table[['SubjectID', 'ProblemID', 'CodeStateID' ]]
@@ -166,7 +193,36 @@ for problem in meta_problem_subjects:
     total_concepts[problem] = sum(meta_problem_subjects[problem])
 print(total_concepts)
 
-test = scipy.stats.zscore([3, 6])
+
+def predict(student, problem):
+    score_sum = 0
+    
+    abilities = []
+    ability_locations = []
+    
+    total_hierarchy = 0
+    for i, x in enumerate(problem):
+        if x == 1:
+            abilities.append(concept_array[i])
+            ability_locations.append(i)
+            total_hierarchy += hierarchy[concept_array[i]]
+    
+    ability_weights = {}
+    for a in abilities:
+        ability_weights[a] = hierarchy[a]/total_hierarchy
+        #calculating weights
+    
+    for x in ability_locations:
+        score_sum += student.student_skills[x] * ability_weights[concept_array[x]]
+    
+    return score_sum
+        
+print( predict(student_list[120], [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1]) )
+
+
+
+
+
 
 
 """"
