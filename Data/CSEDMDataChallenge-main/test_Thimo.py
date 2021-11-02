@@ -216,8 +216,24 @@ def predict(student, problem):
         score_sum += student.student_skills[x] * ability_weights[concept_array[x]]
     
     return score_sum
-        
-print( predict(student_list[120], [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1]) )
+
+def predict_sets(students, problems):
+    d=[]
+    for problem in problems:
+        for student in students:
+            
+            d.append(
+                {'student': student,
+                 'problem': problem,
+                 'score': predict(student, problem) 
+                 }
+            )    
+    frame = pd.DataFrame(d)
+    return frame
+    
+    
+result = predict_sets(student_list, [[1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1], [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
+print( result )
 
 
 
