@@ -3,6 +3,7 @@ import pandas as pd
 from ProgSnap2 import ProgSnap2Dataset
 import numpy as np
 import scipy.stats
+from sklearn.metrics import classification_report
 
 
 
@@ -223,7 +224,7 @@ def predict_sets(students, problems):
         for student in students:
             
             d.append(
-                {'student': student,
+                {'student': student.student_id,
                  'problem': problem,
                  'score': predict(student, problem) 
                  }
@@ -232,13 +233,49 @@ def predict_sets(students, problems):
     return frame
     
     
-result = predict_sets(student_list, [[1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1], [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
-print( result )
+#result = predict_sets(student_list, [[1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1], [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
+#print( result )
+
+predictions = predict_sets(student_list, meta_problem_subjects.to_numpy())
+#true_values = 
+
+del early_test['AssignmentID']
+del early_train['AssignmentID']
+del early_train['Attempts']
+del early_train['CorrectEventually']
 
 
+all_data = pd.concat([early_test, early_train])
+#all_data['concepts'] = all_data.apply(meta_problem.Loc[meta_problem['ProblemID'] == all_data['Pr']
 
-
-
+                                                       
+actual_y = []
+predicted_y = []
+#for subject, probem, label in all_data.itertuples():
+complete = []
+for row in all_data.itertuples():
+    student = Student.get_by_id_from_list(getattr(row, 'SubjectID'), student_list)
+    
+    problem = getattr(row, 'ProblemID')
+    temp = meta_problem.loc[meta_problem['ProblemID'] == problem]
+    del temp['ProblemID']
+    [concepts] = temp.to_numpy()
+    
+    true_label = getattr(row, 'Label')
+    predict_label = True
+    if predict(student, concepts) < 0.25: predict_label=False
+        
+    complete.append(
+        {'student': student,
+         'problem': concepts,
+         'true_y': true_label,
+         'predicted_y': predict_label            
+            }
+    )
+frame_complete = pd.DataFrame(complete)
+actual_y = frame_complete['true_y'].to_numpy()
+predicted_y = frame_complete['predicted_y'].to_numpy()
+print(classification_report(actual_y, predicted_y))
 
 
 """"
