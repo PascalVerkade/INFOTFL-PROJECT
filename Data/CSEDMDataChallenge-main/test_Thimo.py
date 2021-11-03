@@ -275,7 +275,7 @@ for row in all_data.itertuples():
     
     true_label = getattr(row, 'Label')
     predict_label = True
-    if predict(student, concepts) < 0.2: predict_label=False
+    if predict(student, concepts) < 0.25: predict_label=False
         
     complete.append(
         {'student': student,
