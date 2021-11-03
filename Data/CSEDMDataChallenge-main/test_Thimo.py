@@ -4,6 +4,7 @@ from ProgSnap2 import ProgSnap2Dataset
 import numpy as np
 import scipy.stats
 from sklearn.metrics import classification_report
+import random
 
 
 
@@ -181,10 +182,13 @@ def model_abilities(student):
             update_model(student, problem)
 
 
-print(student_list[120].student_skills)
+
 for student in student_list:
     model_abilities(student)
-print(student_list[120].student_skills)
+
+
+
+print(random.choice(student_list).student_skills)
 
 
 
@@ -204,7 +208,7 @@ test = student_problem_codestate.groupby(["ProblemID", "SubjectID"])["CodeStateI
 total_concepts = {}
 for problem in meta_problem_subjects:
     total_concepts[problem] = sum(meta_problem_subjects[problem])
-print(total_concepts)
+
 
 
 def predict(student, problem):
@@ -284,6 +288,7 @@ for row in all_data.itertuples():
          'predicted_y': predict_label            
             }
     )
+    
 frame_complete = pd.DataFrame(complete)
 actual_y = frame_complete['true_y'].to_numpy()
 predicted_y = frame_complete['predicted_y'].to_numpy()
