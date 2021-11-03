@@ -32,12 +32,19 @@ BASE_PATH = os.path.join('..', 'Release', semester)
 TRAIN_PATH = os.path.join(BASE_PATH, 'Train')
 TEST_PATH = os.path.join(BASE_PATH, 'Test')
 MAIN_PATH = os.path.join(BASE_PATH, r'Train\Data')
+MAIN_PATH2 = os.path.join(BASE_PATH, r'test\Data')
 
 main = ProgSnap2Dataset(os.path.join(MAIN_PATH, 'MainTable'))
+main2 = ProgSnap2Dataset(os.path.join(MAIN_PATH2, 'MainTable'))
 train_ps2 = ProgSnap2Dataset(os.path.join(TRAIN_PATH, '..'))
 early_train = pd.read_csv(os.path.join(TRAIN_PATH, 'early.csv'))
 early_test = pd.read_csv(os.path.join(TRAIN_PATH, 'late.csv'))
 
+del early_test['AssignmentID']
+del early_train['AssignmentID']
+del early_train['Attempts']
+del early_train['CorrectEventually']
+all_data = pd.concat([early_test, early_train])
 
 META_PROBLEM_FILE = r"2nd CSEDM Data Challenge - Problem Prompts _ Concepts Used.xlsx"
 META_PROBLEM_PATH = os.path.join(BASE_PATH, META_PROBLEM_FILE)
@@ -144,7 +151,8 @@ def get_meta_data(students):
                                               
     return aa, sd, pw, no_concepts
 
-student_list = initialise_students(early_train)
+#student_list = initialise_students(early_train)
+student_list = initialise_students(all_data)
 average_attempts, sd_average_attempts, problem_weights, problem_concepts = get_meta_data(student_list)
 
 
@@ -182,7 +190,11 @@ print(student_list[120].student_skills)
 
 
 main_table = main.get_main_table()
-student_problem_codestate = main_table[['SubjectID', 'ProblemID', 'CodeStateID' ]]
+main_table2 = main2.get_main_table()
+all_main = pd.concat([main_table, main_table2])
+
+#student_problem_codestate = main_table[['SubjectID', 'ProblemID', 'CodeStateID' ]]
+student_problem_codestate = all_main[['SubjectID', 'ProblemID', 'CodeStateID' ]]
 
 test = student_problem_codestate.groupby(["ProblemID", "SubjectID"])["CodeStateID"].apply(list).to_dict()
 
@@ -202,8 +214,10 @@ def predict(student, problem):
     ability_locations = []
     
     total_hierarchy = 0
+   
     for i, x in enumerate(problem):
         if x == 1:
+            #if student.student_skills[i] != 0:
             abilities.append(concept_array[i])
             ability_locations.append(i)
             total_hierarchy += hierarchy[concept_array[i]]
@@ -237,15 +251,13 @@ def predict_sets(students, problems):
 #print( result )
 
 predictions = predict_sets(student_list, meta_problem_subjects.to_numpy())
-#true_values = 
-
-del early_test['AssignmentID']
-del early_train['AssignmentID']
-del early_train['Attempts']
-del early_train['CorrectEventually']
 
 
-all_data = pd.concat([early_test, early_train])
+#del early_test['AssignmentID']
+#del early_train['AssignmentID']
+#del early_train['Attempts']
+#del early_train['CorrectEventually']
+#all_data = pd.concat([early_test, early_train])
 #all_data['concepts'] = all_data.apply(meta_problem.Loc[meta_problem['ProblemID'] == all_data['Pr']
 
                                                        
@@ -263,7 +275,7 @@ for row in all_data.itertuples():
     
     true_label = getattr(row, 'Label')
     predict_label = True
-    if predict(student, concepts) < 0.25: predict_label=False
+    if predict(student, concepts) < 0.2: predict_label=False
         
     complete.append(
         {'student': student,
