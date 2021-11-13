@@ -103,8 +103,6 @@ concept_array = ['If/Else','NestedIf', 'While', 'For', 'NestedFor',
                  'Math+-*/', 'Math%', 'LogicAndNotOr', 'LogicCompareNum', 
                  'LogicBoolean' , 'StringFormat', 'StringConcat', 'StringIndex',
                  'StringLen', 'StringEqual', 'CharEqual', 'ArrayIndex' , 'DefFunction'
-                 
-                 
                  ]
 
 #calculate total concepts for the given problems
@@ -116,6 +114,7 @@ for problem in meta_problem_subjects:
 main_table = main.get_main_table()
 student_problem_codestate = main_table[['SubjectID', 'ProblemID', 'CodeStateID' ]]
 problem_student_table = student_problem_codestate.groupby(["ProblemID", "SubjectID"])["CodeStateID"].unique().apply(list).to_dict()
+
 
 #initialise a list of students based on the complete dataframe
 def initialise_students(student_dataframe):
@@ -136,6 +135,7 @@ def initialise_students(student_dataframe):
         student_list.append(new_student)
         
     return student_list
+
 
 #calculate and create dictionaris for the metadata: For each problem: Average attempts, standard deviation, weight and amount of concepts. Also adds score for problem to the student objects
 def get_meta_data(students):
@@ -180,34 +180,29 @@ def get_meta_data(students):
                                               
     return aa, sd, pw, no_concepts
 
+
 #updating a student model given a student and a problem
 def update_model(student, problem):
     problem_row_name = meta_problem[meta_problem["ProblemID"] == problem]
     problem_row_name = problem_row_name.drop(['ProblemID'], axis=1)
         
+    #check all concepts, and only update those that are part of problem and calculate necessary items
     for i, ability in enumerate(problem_row_name):
         if problem_row_name.iloc[0][ability] == 1:
             student_weight_old = student.student_weight[ability]
             student.student_weight[ability] = student.student_weight[ability] + problem_weights[problem]
-            #score = (student.problem_attempts[problem] / (average_attempts[problem] + sd_average_attempts[problem] )) * student.problems[problem]
             score = student.problem_scores[problem] * student.problems[problem]
-            #if student.problems[problem]:
             student.student_skills[i] = ((student.student_skills[i] * student_weight_old) + (score * problem_weights[problem])) / student.student_weight[ability]
+
 
 #generic method to call update for list of student and the problems the student has made.
 def model_abilities(student):
+    #get the problem list of this student basd on the 75% training set.
     training = train_data[train_data["SubjectID"] == student.student_id]
-    problem_list = training[['ProblemID', 'Label']].to_dict('records') 
     problem_dict = dict(zip(training.ProblemID, training.Label))
-    
+    #for each problem, update the model
     for problem in problem_dict:
         update_model(student, problem)
-
-    #doing all:
-    #for problem in student.problems:
-    #    update_model(student, problem)
-
-
 
 
 #method to predict a score/struggle probability of a single studnt on a single problem
@@ -238,6 +233,7 @@ def predict(student, problem):
     
     return score_sum
 
+
 #wrapper-method to call predict on a set of students and a set of problems
 def predict_sets(students, problems):
     d=[]
@@ -259,10 +255,9 @@ def predict_sets(students, problems):
 student_list = initialise_students(all_data)
 average_attempts, sd_average_attempts, problem_weights, problem_concepts = get_meta_data(student_list)
 
-test = None
 #call to model the abilities of a studnt
 for student in student_list:
-    test = model_abilities(student)
+    model_abilities(student)
 
 #print single instance of student model (for insight purposes and to check that it worked)
 print(random.choice(student_list).student_skills)
