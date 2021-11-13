@@ -63,6 +63,11 @@ del early_train['Attempts']
 del early_train['CorrectEventually']
 all_data = pd.concat([early_test, early_train])
 
+#splitting randomly to test and training set on 75-25% (as was the original distribution):
+test_data = all_data.sample(frac=0.25)
+test_indices = list(test_data.index.values) 
+train_data = all_data.drop(test_indices)
+
 #call, read and create dataframe of meta-file of annotated problems
 META_PROBLEM_FILE = r"2nd CSEDM Data Challenge - Problem Prompts _ Concepts Used.xlsx"
 META_PROBLEM_PATH = os.path.join(BASE_PATH, META_PROBLEM_FILE)
@@ -191,8 +196,19 @@ def update_model(student, problem):
 
 #generic method to call update for list of student and the problems the student has made.
 def model_abilities(student):
-    for problem in student.problems:
-            update_model(student, problem)
+    training = train_data[train_data["SubjectID"] == student.student_id]
+    problem_list = training[['ProblemID', 'Label']].to_dict('records') 
+    problem_dict = dict(zip(training.ProblemID, training.Label))
+    
+    for problem in problem_dict:
+        update_model(student, problem)
+
+    #doing all:
+    #for problem in student.problems:
+    #    update_model(student, problem)
+
+
+
 
 #method to predict a score/struggle probability of a single studnt on a single problem
 def predict(student, problem):
@@ -243,9 +259,10 @@ def predict_sets(students, problems):
 student_list = initialise_students(all_data)
 average_attempts, sd_average_attempts, problem_weights, problem_concepts = get_meta_data(student_list)
 
+test = None
 #call to model the abilities of a studnt
 for student in student_list:
-    model_abilities(student)
+    test = model_abilities(student)
 
 #print single instance of student model (for insight purposes and to check that it worked)
 print(random.choice(student_list).student_skills)
@@ -257,7 +274,7 @@ actual_y = []
 predicted_y = []
 complete = []
 #for all data entries, get students, problems with accompanying concepts and annotated labels.
-for row in all_data.itertuples():
+for row in all_data.sample(frac=0.25).itertuples():
     
     student = Student.get_by_id_from_list(getattr(row, 'SubjectID'), student_list)
     problem = getattr(row, 'ProblemID')
